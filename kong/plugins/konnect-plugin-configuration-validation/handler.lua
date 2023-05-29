@@ -198,7 +198,7 @@ function konnect_plugin_configuration_validation:access(conf)
     end
 
     -- Ensure the error response is at the root of the JSON object
-    return kong.response.exit(400, err) -- Bad request
+    return kong.response.exit(400, err, { ["Content-Type"] = "application/json" }) -- Bad request
   end
 
   -- Return the plugin entity
