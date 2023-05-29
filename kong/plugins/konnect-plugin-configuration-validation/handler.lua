@@ -136,13 +136,18 @@ local function validate_plugin_configuration(schema_input, configuration_input)
     return nil, "invalid configuration for plugin: cannot be empty"
   end
 
+  -- Ensure configuration name matches plugin schema name
+  local plugin_name = plugin_schema.name
+  if plugin_name ~= configuration.name then
+    return nil, "plugin configuration name does not match plugin schema name"
+  end
+
   -- Process the auto fields; ensuring the entire plugin configuration is
   -- returned when being validated.
   --
   -- Note: A base configuration of the entity is applied as we are not
   --       validating the base entity only the configuration of the plugin
   --       schema.
-  local plugin_name = plugin_schema.name
   local plugin_entity, err = plugins_subschema_entity:process_auto_fields(configuration, "insert")
   if err then
     return nil, "unable to process auto fields for plugin " .. plugin_name .. ": " .. err
