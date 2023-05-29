@@ -476,12 +476,7 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.response(r).has.status(400)
           local json = assert.response(r).has.jsonbody()
           assert.same({
-            code = 2,
-            fields = {
-              name = "plugin 'acl' not enabled; add it to the 'plugins' configuration property",
-            },
-            message = "schema violation (name: plugin 'acl' not enabled; add it to the 'plugins' configuration property)",
-            name = "schema violation"
+            message = "plugin configuration name does not match plugin schema name"
           }, json)
         end)
 
