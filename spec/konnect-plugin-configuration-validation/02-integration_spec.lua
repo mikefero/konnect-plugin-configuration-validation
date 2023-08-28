@@ -440,20 +440,13 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.response(r).has.status(400)
           local json = assert.response(r).has.jsonbody()
           assert.same({
-            code = 2,
-            fields = {
-              config = {
-                invalid = "unknown field",
-              },
-              ["@entity"] = {
-                "exactly one of these fields must be non-empty: 'config.allow', 'config.deny'",
-                "at least one of these fields must be non-empty: 'config.allow', 'config.deny'"
-              }
+            config = {
+              invalid = "unknown field",
             },
-            message = "3 schema violations (exactly one of these fields must be non-empty: 'config.allow', " ..
-            "'config.deny'; at least one of these fields must be non-empty: 'config.allow', " ..
-            "'config.deny'; config.invalid: unknown field)",
-            name = "schema violation"
+            ["@entity"] = {
+              "exactly one of these fields must be non-empty: 'config.allow', 'config.deny'",
+              "at least one of these fields must be non-empty: 'config.allow', 'config.deny'"
+            }
           }, json)
         end)
 
@@ -506,14 +499,9 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.response(r).has.status(400)
           local json = assert.response(r).has.jsonbody()
           assert.same({
-            code = 2,
-            fields = {
-              protocols = {
-                "expected one of: grpc, grpcs, http, https"
-              }
-            },
-            message = "schema violation (protocols.1: expected one of: grpc, grpcs, http, https)",
-            name = "schema violation"
+            protocols = {
+              "expected one of: grpc, grpcs, http, https"
+            }
           }, json)
         end)
 
@@ -543,12 +531,7 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.response(r).has.status(400)
           local json = assert.response(r).has.jsonbody()
           assert.same({
-            code = 2,
-            fields = {
-              consumer = "value must be null"
-            },
-            message = "schema violation (consumer: value must be null)",
-            name = "schema violation"
+            consumer = "value must be null"
           }, json)
         end)
 
