@@ -156,13 +156,7 @@ local function validate_plugin_configuration(schema_input, configuration_input)
   -- Valdate the configuration
   local _, err = plugins_subschema_entity:validate_insert(plugin_entity)
   if err then
-    local schema_violation_error = errors:schema_violation(err)
-    local flat_message, err = cjson.encode(schema_violation_error)
-    if err then
-      return nil, "unable to validate plugin " .. plugin_name .. ": " .. schema_violation_error
-    else
-      return nil, flat_message
-    end
+    return nil, cjson.encode(err)
   end
 
   return plugin_entity, nil
