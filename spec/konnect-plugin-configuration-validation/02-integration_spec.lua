@@ -3,6 +3,9 @@ local ngx = ngx
 local helpers = require "spec.helpers"
 local PLUGIN_NAME = "konnect-plugin-configuration-validation"
 
+local pl_stringx = require "pl.stringx"
+
+
 for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
   describe(PLUGIN_NAME .. ": (access) [#" .. strategy .. "]", function()
     local client
@@ -585,7 +588,7 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.response(r).has.status(400)
           local json = assert.response(r).has.jsonbody()
           assert.same({
-            message = "invalid schema for plugin: missing plugin name"
+            message = "schema violation (name: field required for entity check)"
           }, json)
         end)
 
@@ -676,6 +679,28 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
           assert.same({
             message = "invalid configuration for plugin: cannot be empty"
           }, json)
+        end)
+
+        it("fails when type definition is not one of expected types", function()
+          local r = client:post("/konnect/plugin/configuration/validation", {
+            headers = {
+              ["Content-Type"] = "application/json"
+            },
+            body = {
+              schema = [[
+                return {
+                  name = "invalid-type-foo",
+                  fields = {
+                    { config = { type = "foo", fields = {} } }
+                  }
+                }
+              ]],
+              configuration = "{}"
+            }
+          })
+          assert.response(r).has.status(400)
+          local json = assert.response(r).has.jsonbody()
+          assert.truthy(pl_stringx.startswith(json.message, 'schema violation (fields.1: {\n  type = \"expected one of:'))
         end)
       end)
     end)

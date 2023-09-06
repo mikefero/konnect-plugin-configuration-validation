@@ -60,11 +60,11 @@ local function validate_plugin_schema(input)
     local err
     plugin_schema, err = load(input)()
     if err then
-      return nil, nil, "error processing load for plugin schema: " .. err
+      return error("error processing load for plugin schema: " .. err)
     end
   end)
   if not pok then
-    return nil, nil, "error processing load for plugin schema: " .. perr
+    return nil, nil, perr
   end
   if is_empty(plugin_schema) then
     return nil, nil, "invalid schema for plugin: cannot be empty"
@@ -78,11 +78,11 @@ local function validate_plugin_schema(input)
   local pok, perr = pcall(function()
     local ok, err = metaschema.MetaSubSchema:validate(plugin_schema)
     if not ok then
-      return nil, nil, tostring(errors:schema_violation(err))
+      return error(errors:schema_violation(err))
     end
   end)
   if not pok then
-    return nil, nil, "error calling MetaSubSchema:validate: " .. perr
+    return nil, nil, perr
   end
 
   -- Load the plugin schema for use in configuration validation when
@@ -92,23 +92,20 @@ local function validate_plugin_schema(input)
     return nil, nil, "unable to create plugin entity: " .. err
   end
   local plugin_name = plugin_schema.name
-  if is_empty(plugin_name) then
-    return nil, nil, "invalid schema for plugin: missing plugin name"
-  end
   -- Note: "pcall" is used for this operation to ensure proper error handling
   -- for "assert" calls performed in the "entity:new_subschema" function. When
   -- iterating the arrays/fields of the plugin schema an "assert" is possible.
   pok, perr = pcall(function()
     local ok, err = plugins_subschema_entity:new_subschema(plugin_name, plugin_schema)
     if not ok then
-      return nil, nil, "error loading schema for plugin " .. plugin_name .. ": " .. err
+      return error("error loading schema for plugin " .. plugin_name .. ": " .. err)
     end
   end)
   if not pok then
-    return nil, nil, "error validating plugin schema: " .. perr
+    return nil, nil, perr
   end
 
-  return plugins_subschema_entity, plugin_schema
+  return plugins_subschema_entity, plugin_schema, nil
 end
 
 --- Check the contents of a plugin schema string representation and ensure that
@@ -193,7 +190,18 @@ function konnect_plugin_configuration_validation:access(conf)
     -- Determine if err is a JSON object or a regular string
     local _, derr = cjson.decode(err)
     if derr then
-      return kong.response.error(400, err) -- Bad request  
+      if type(err) == "string" then
+        return kong.response.error(400, err) -- Bad request
+      end
+
+      -- Remove extra fields if message is present
+      local rmessage = err
+      if err.message then
+        rmessage = {
+          message = err.message
+        }
+      end
+      return kong.response.exit(400, rmessage, { ["Content-Type"] = "application/json" }) -- Bad request
     end
 
     -- Ensure the error response is at the root of the JSON object
